@@ -1,6 +1,6 @@
 {
   "name": "@injectivelabs/wormhole-sdk",
-  "version": "1.10.0-alpha.2",
+  "version": "1.10.0-alpha.3",
   "description": "SDK for interacting with Wormhole",
   "homepage": "https://wormhole.com",
   "main": "./lib/cjs/index.js",
