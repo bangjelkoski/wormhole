@@ -1,5 +1,4 @@
 import { PublicKeyInitData } from "@solana/web3.js";
-import { decodeAddress, getApplicationAddress } from "algosdk";
 import { bech32 } from "bech32";
 import {
   arrayify,
@@ -30,13 +29,6 @@ export async function getEmitterAddressTerra(programAddress: string) {
 export const getEmitterAddressInjective = getEmitterAddressTerra;
 
 export const getEmitterAddressXpla = getEmitterAddressTerra;
-
-export function getEmitterAddressAlgorand(appId: bigint): string {
-  const appAddr: string = getApplicationAddress(appId);
-  const decAppAddr: Uint8Array = decodeAddress(appAddr).publicKey;
-  const aa: string = uint8ArrayToHex(decAppAddr);
-  return aa;
-}
 
 export function getEmitterAddressNear(programAddress: string): string {
   return uint8ArrayToHex(arrayify(sha256(Buffer.from(programAddress, "utf8"))));

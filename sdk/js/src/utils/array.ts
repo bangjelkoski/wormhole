@@ -1,16 +1,9 @@
 import { arrayify, zeroPad } from "@ethersproject/bytes";
 import { PublicKey } from "@solana/web3.js";
 import { hexValue, hexZeroPad, sha256, stripZeros } from "ethers/lib/utils";
-import { Provider as NearProvider } from "near-api-js/lib/providers";
 import { ethers } from "ethers";
-import {
-  hexToNativeAssetStringAlgorand,
-  nativeStringToHexAlgorand,
-  uint8ArrayToNativeStringAlgorand,
-} from "../algorand";
 import { canonicalAddress, humanAddress } from "../cosmos";
 import { buildTokenId } from "../cosmwasm/address";
-import { isNativeDenom } from "../terra";
 import {
   ChainId,
   ChainName,
@@ -32,8 +25,7 @@ import {
   CHAIN_ID_XPLA,
   CHAIN_ID_BTC,
 } from "./consts";
-import { hashLookup } from "./near";
-import { getExternalAddressFromType, isValidAptosType } from "./aptos";
+import { isNativeDenom } from "../terra";
 
 /**
  *
@@ -66,7 +58,7 @@ export const uint8ArrayToHex = (a: Uint8Array): string =>
 export const hexToUint8Array = (h: string): Uint8Array => {
   if (h.startsWith("0x")) h = h.slice(2);
   return new Uint8Array(Buffer.from(h, "hex"));
-}
+};
 
 /**
  *
@@ -98,8 +90,6 @@ export const tryUint8ArrayToNative = (
     }
   } else if (chainId === CHAIN_ID_INJECTIVE) {
     return humanAddress("inj", a.slice(-20));
-  } else if (chainId === CHAIN_ID_ALGORAND) {
-    return uint8ArrayToNativeStringAlgorand(a);
   } else if (chainId == CHAIN_ID_WORMCHAIN) {
     // wormchain addresses are always 20 bytes.
     return humanAddress("wormhole", a.slice(-20));
@@ -119,21 +109,8 @@ export const tryUint8ArrayToNative = (
     throw Error("uint8ArrayToNative: Btc not supported");
   } else {
     // This case is never reached
-    const _: never = chainId;
     throw Error("Don't know how to convert address for chain " + chainId);
   }
-};
-
-export const tryHexToNativeStringNear = async (
-  provider: NearProvider,
-  tokenBridge: string,
-  address: string
-): Promise<string> => {
-  const { found, value } = await hashLookup(provider, tokenBridge, address);
-  if (!found) {
-    throw new Error("Address not found");
-  }
-  return value;
 };
 
 /**
@@ -144,10 +121,7 @@ export const tryHexToNativeStringNear = async (
  * @throws if address is not the right length for the given chain
  */
 export const tryHexToNativeAssetString = (h: string, c: ChainId): string =>
-  c === CHAIN_ID_ALGORAND
-    ? // Algorand assets are represented by their asset ids, not an address
-      hexToNativeAssetStringAlgorand(h)
-    : tryHexToNativeString(h, c);
+  tryHexToNativeString(h, c);
 
 /**
  *
@@ -237,8 +211,6 @@ export const tryNativeToHexString = (
     chainId === CHAIN_ID_XPLA
   ) {
     return buildTokenId(chainId, address);
-  } else if (chainId === CHAIN_ID_ALGORAND) {
-    return nativeStringToHexAlgorand(address);
   } else if (chainId == CHAIN_ID_WORMCHAIN) {
     return uint8ArrayToHex(zeroPad(canonicalAddress(address), 32));
   } else if (chainId === CHAIN_ID_NEAR) {
@@ -250,16 +222,13 @@ export const tryNativeToHexString = (
   } else if (chainId === CHAIN_ID_BTC) {
     throw Error("hexToNativeString: Btc not supported yet.");
   } else if (chainId === CHAIN_ID_APTOS) {
-    if (isValidAptosType(address)) {
-      return getExternalAddressFromType(address);
-    }
-
-    return uint8ArrayToHex(zeroPad(arrayify(address, { allowMissingPrefix:true }), 32));
+    return uint8ArrayToHex(
+      zeroPad(arrayify(address, { allowMissingPrefix: true }), 32)
+    );
   } else if (chainId === CHAIN_ID_UNSET) {
     throw Error("hexToNativeString: Chain id unset");
   } else {
     // If this case is reached
-    const _: never = chainId;
     throw Error("Don't know how to convert address from chain " + chainId);
   }
 };

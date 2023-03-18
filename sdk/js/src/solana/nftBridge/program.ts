@@ -15,8 +15,8 @@ export function createNftBridgeProgramInterface(
   return new Program<NftBridge>(
     IDL as NftBridge,
     new PublicKey(programId),
-    provider === undefined ? ({ connection: null } as any) : provider,
-    coder()
+    provider === undefined ? ({ connection: null } as any) : provider
+    // coder()
   );
 }
 

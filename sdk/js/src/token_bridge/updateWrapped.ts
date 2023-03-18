@@ -1,13 +1,5 @@
 import { ethers, Overrides } from "ethers";
-import {
-  createWrappedOnAlgorand,
-  createWrappedOnSolana,
-  createWrappedOnTerra,
-  createWrappedOnNear,
-  submitVAAOnInjective,
-  createWrappedOnXpla,
-  createWrappedOnAptos,
-} from ".";
+import { createWrappedOnSolana, submitVAAOnInjective } from ".";
 import { Bridge__factory } from "../ethers-contracts";
 
 export async function updateWrappedOnEth(
@@ -22,16 +14,6 @@ export async function updateWrappedOnEth(
   return receipt;
 }
 
-export const updateWrappedOnTerra = createWrappedOnTerra;
-
 export const updateWrappedOnInjective = submitVAAOnInjective;
 
-export const updateWrappedOnXpla = createWrappedOnXpla;
-
 export const updateWrappedOnSolana = createWrappedOnSolana;
-
-export const updateWrappedOnAlgorand = createWrappedOnAlgorand;
-
-export const updateWrappedOnNear = createWrappedOnNear;
-
-export const updateWrappedOnAptos = createWrappedOnAptos;

@@ -5,8 +5,6 @@ import {
   PublicKeyInitData,
   Transaction,
 } from "@solana/web3.js";
-import { MsgExecuteContract } from "@terra-money/terra.js";
-import { Types } from "aptos";
 import { ethers, Overrides } from "ethers";
 import { fromUint8Array } from "js-base64";
 import { Bridge__factory } from "../ethers-contracts";
@@ -89,32 +87,4 @@ export async function createMetaOnSolana(
   transaction.recentBlockhash = blockhash;
   transaction.feePayer = new PublicKey(payerAddress);
   return transaction;
-}
-
-export async function redeemOnTerra(
-  nftBridgeAddress: string,
-  walletAddress: string,
-  signedVAA: Uint8Array
-): Promise<MsgExecuteContract> {
-  return new MsgExecuteContract(walletAddress, nftBridgeAddress, {
-    submit_vaa: {
-      data: fromUint8Array(signedVAA),
-    },
-  });
-}
-
-export async function redeemOnAptos(
-  nftBridgeAddress: string,
-  transferVAA: Uint8Array
-): Promise<Types.EntryFunctionPayload> {
-  const parsedVAA = parseNftTransferVaa(transferVAA);
-  if (parsedVAA.toChain !== CHAIN_ID_APTOS) {
-    throw new Error("Transfer is not destined for Aptos.");
-  }
-
-  return {
-    function: `${nftBridgeAddress}::complete_transfer::submit_vaa_and_register_entry`,
-    type_arguments: [],
-    arguments: [transferVAA],
-  };
 }

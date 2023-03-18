@@ -4,12 +4,9 @@ import {
   PublicKey,
   PublicKeyInitData,
 } from "@solana/web3.js";
-import { LCDClient } from "@terra-money/terra.js";
-import { AptosClient, TokenTypes, Types } from "aptos";
 import { BigNumber, ethers } from "ethers";
 import { arrayify, zeroPad } from "ethers/lib/utils";
 import { WormholeWrappedInfo } from "..";
-import { OriginInfo } from "../aptos/types";
 import { canonicalAddress } from "../cosmos";
 import { TokenImplementation__factory } from "../ethers-contracts";
 import { getWrappedMeta } from "../solana/nftBridge";
@@ -20,9 +17,7 @@ import {
   CHAIN_ID_APTOS,
   CHAIN_ID_SOLANA,
   coalesceChainId,
-  deriveCollectionHashFromTokenId,
   hex,
-  deriveTokenHashFromTokenId,
   ensureHexPrefix,
   uint8ArrayToHex,
 } from "../utils";
@@ -154,89 +149,4 @@ function bigToUint8Array(big: bigint) {
     j += 2;
   }
   return u8;
-}
-
-export async function getOriginalAssetTerra(
-  client: LCDClient,
-  wrappedAddress: string,
-  lookupChain: ChainId | ChainName
-): Promise<WormholeWrappedInfo> {
-  try {
-    const result: {
-      asset_address: string;
-      asset_chain: ChainId;
-      bridge: string;
-    } = await client.wasm.contractQuery(wrappedAddress, {
-      wrapped_asset_info: {},
-    });
-    if (result) {
-      return {
-        isWrapped: true,
-        chainId: result.asset_chain,
-        assetAddress: new Uint8Array(
-          Buffer.from(result.asset_address, "base64")
-        ),
-      };
-    }
-  } catch (e) {}
-  return {
-    isWrapped: false,
-    chainId: coalesceChainId(lookupChain),
-    assetAddress: zeroPad(canonicalAddress(wrappedAddress), 32),
-  };
-}
-
-/**
- * Given a token ID, returns the original asset chain and address. If this is a
- * native asset, the asset address will be the collection hash.
- * @param client
- * @param nftBridgeAddress
- * @param tokenId An object containing creator address, collection name, token
- * name, and property version, which together uniquely identify a token on
- * Aptos. For wrapped assets, property version will be 0.
- * @returns Object containing origin chain and Wormhole compatible 32-byte asset
- * address.
- */
-export async function getOriginalAssetAptos(
-  client: AptosClient,
-  nftBridgeAddress: string,
-  tokenId: TokenTypes.TokenId
-): Promise<WormholeWrappedNFTInfo> {
-  try {
-    const originInfo = (
-      await client.getAccountResource(
-        tokenId.token_data_id.creator,
-        `${nftBridgeAddress}::state::OriginInfo`
-      )
-    ).data as OriginInfo;
-    const chainId = Number(originInfo.token_chain.number);
-    assertChain(chainId);
-    return {
-      isWrapped: true,
-      chainId,
-      assetAddress:
-        chainId === CHAIN_ID_SOLANA
-          ? arrayify(BigNumber.from(hex(tokenId.token_data_id.name)))
-          : new Uint8Array(hex(originInfo.token_address.external_address)),
-      tokenId: ensureHexPrefix(hex(tokenId.token_data_id.name).toString("hex")),
-    };
-  } catch (e: any) {
-    if (
-      !(
-        (e instanceof Types.ApiError || e.errorCode === "resource_not_found") &&
-        e.status === 404
-      )
-    ) {
-      throw e;
-    }
-  }
-
-  return {
-    isWrapped: false,
-    chainId: CHAIN_ID_APTOS,
-    assetAddress: await deriveCollectionHashFromTokenId(tokenId),
-    tokenId: ensureHexPrefix(
-      uint8ArrayToHex(await deriveTokenHashFromTokenId(tokenId))
-    ),
-  };
 }

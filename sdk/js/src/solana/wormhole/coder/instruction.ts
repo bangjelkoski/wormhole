@@ -24,7 +24,7 @@ export class WormholeInstructionCoder implements InstructionCoder {
         let fieldLayouts = m.args.map((arg: IdlField) => {
           return IdlCoder.fieldLayout(
             arg,
-            Array.from([...(idl.accounts ?? []), ...(idl.types ?? [])])
+            Array.from([...(idl.accounts ?? []), ...(idl.types ?? [])]) as any
           );
         });
         const name = camelCase(m.name);
@@ -32,10 +32,10 @@ export class WormholeInstructionCoder implements InstructionCoder {
       })
       .concat(
         idl.instructions.map((ix) => {
-          let fieldLayouts = ix.args.map((arg: IdlField) =>
+          let fieldLayouts = ix.args.map((arg: any) =>
             IdlCoder.fieldLayout(
               arg,
-              Array.from([...(idl.accounts ?? []), ...(idl.types ?? [])])
+              Array.from([...(idl.accounts ?? []), ...(idl.types ?? [])]) as any
             )
           );
           const name = camelCase(ix.name);
