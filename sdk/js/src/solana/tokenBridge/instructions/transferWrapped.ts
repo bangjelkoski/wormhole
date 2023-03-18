@@ -12,7 +12,6 @@ import {
   deriveWrappedMetaKey,
   deriveWrappedMintKey,
 } from "../accounts";
-import { BN } from "@project-serum/anchor";
 
 export function createTransferWrappedInstruction(
   tokenBridgeProgramId: PublicKeyInitData,
@@ -29,18 +28,13 @@ export function createTransferWrappedInstruction(
   targetAddress: Buffer | Uint8Array,
   targetChain: number
 ): TransactionInstruction {
-  const tA =
-    targetAddress.constructor === Uint8Array
-      ? (targetAddress as Uint8Array)
-      : Uint8Array.from(Buffer.from(targetAddress));
-
   const methods = createReadOnlyTokenBridgeProgramInterface(
     tokenBridgeProgramId
   ).methods.transferWrapped(
     nonce,
-    new BN(amount.toString()),
-    new BN(fee.toString()),
-    Array.from(tA),
+    amount as any,
+    fee as any,
+    Buffer.from(targetAddress) as any,
     targetChain
   );
 

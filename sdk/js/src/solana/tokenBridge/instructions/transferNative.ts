@@ -12,7 +12,6 @@ import {
   deriveTokenBridgeConfigKey,
   deriveCustodyKey,
 } from "../accounts";
-import { BN } from "@project-serum/anchor";
 
 export function createTransferNativeInstruction(
   tokenBridgeProgramId: PublicKeyInitData,
@@ -27,18 +26,13 @@ export function createTransferNativeInstruction(
   targetAddress: Buffer | Uint8Array,
   targetChain: number
 ): TransactionInstruction {
-  const tA =
-    targetAddress.constructor === Uint8Array
-      ? (targetAddress as Uint8Array)
-      : Uint8Array.from(Buffer.from(targetAddress));
-
   const methods = createReadOnlyTokenBridgeProgramInterface(
     tokenBridgeProgramId
   ).methods.transferNative(
     nonce,
-    new BN(amount.toString()),
-    new BN(fee.toString()),
-    Array.from(tA),
+    amount as any,
+    fee as any,
+    Buffer.from(targetAddress) as any,
     targetChain
   );
 
@@ -51,7 +45,7 @@ export function createTransferNativeInstruction(
       message,
       from,
       mint
-    ),
+    ) as any,
     signers: undefined,
     remainingAccounts: undefined,
     preInstructions: undefined,

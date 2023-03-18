@@ -13,8 +13,8 @@ export function createTokenBridgeProgramInterface(
   return new Program<TokenBridge>(
     IDL as TokenBridge,
     new PublicKey(programId),
-    provider === undefined ? ({ connection: null } as any) : provider
-    // coder()
+    provider === undefined ? ({ connection: null } as any) : provider,
+    coder()
   );
 }
 

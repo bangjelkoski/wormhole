@@ -3,6 +3,8 @@ import {
   Connection,
   PublicKey,
   PublicKeyInitData,
+  SystemProgram,
+  TransactionInstruction,
 } from "@solana/web3.js";
 import { Program, Provider } from "@project-serum/anchor";
 import { createReadOnlyProvider } from "../utils";
@@ -18,8 +20,8 @@ export function createWormholeProgramInterface(
   return new Program<Wormhole>(
     IDL as Wormhole,
     new PublicKey(programId),
-    provider === undefined ? ({ connection: null } as any) : provider
-    // coder()
+    provider === undefined ? ({ connection: null } as any) : provider,
+    coder()
   );
 }
 
